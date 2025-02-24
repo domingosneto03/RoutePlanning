@@ -1,25 +1,90 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <unordered_map>
+#include "data_structures/Graph.h"
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
-    // <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
+using namespace std;
 
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code.
-        // We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/>
-        // breakpoint for you, but you can always add more by pressing
-        // <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+template <class T>
+void loadLocations(Graph<T>& graph, const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error opening file: " << filename << endl;
+        return;
     }
 
-    return 0;
+    string line;
+    getline(file, line); // Skip header
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string location, id_str, code, parking_str;
+
+        getline(ss, location, ',');
+        getline(ss, id_str, ',');
+        getline(ss, code, ',');
+        getline(ss, parking_str, ',');
+
+        int id = stoi(id_str);
+        int parking = stoi(parking_str); // 1 if parking exists, 0 otherwise
+
+        // Add vertex (node) to the graph
+        graph.addVertex(id);
+        auto v = graph.findVertex(id);
+        v->setLocation(location); v->setCode(code); v->setParking(parking);
+        graph.storeCode(code, id);
+    }
+    file.close();
 }
 
-// TIP See CLion help at <a
-// href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>.
-//  Also, you can try interactive lessons for CLion by selecting
-//  'Help | Learn IDE Features' from the main menu.
+
+template <class T>
+void loadDistances(Graph<T>& graph, const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error opening file: " << filename << endl;
+        return;
+    }
+
+    string line;
+    getline(file, line); // Skip header
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string loc1_code, loc2_code, driving_str, walking_str;
+
+        getline(ss, loc1_code, ',');
+        getline(ss, loc2_code, ',');
+        getline(ss, driving_str, ',');
+        getline(ss, walking_str, ',');
+
+        // Convert codes to IDs
+
+        int loc1 = graph.getIdFromCode(loc1_code);
+        int loc2 = graph.getIdFromCode(loc2_code);
+        double driving = (driving_str == "X") ? INF : stod(driving_str);
+        double walking = stod(walking_str);
+
+        // Add bidirectional edges for driving and walking
+        if (driving != INF) {
+            graph.addBidirectionalEdge(loc1, loc2, driving);
+        }
+        graph.addBidirectionalEdge(loc1, loc2, walking);
+    }
+    file.close();
+}
+
+
+int main() {
+    Graph<int> graph;
+
+    loadLocations(graph, "../csv_data/Locations.csv");
+    loadDistances(graph, "../csv_data/Distances.csv");
+
+    /*
+     * Insert a breakpoint here and explore the graph
+     */
+
+    cout << "Graph loaded with " << graph.getNumVertex() << " vertices." << endl;
+    return 0;
+}
