@@ -55,6 +55,12 @@ build CMakeFiles/da_project1.dir/main.cpp.obj: CXX_COMPILER__da_project1_unscann
   OBJECT_DIR = CMakeFiles\da_project1.dir
   OBJECT_FILE_DIR = CMakeFiles\da_project1.dir
 
+build CMakeFiles/da_project1.dir/menu.cpp.obj: CXX_COMPILER__da_project1_unscanned_Debug C$:/Users/domin/Faculdade/DA/24_25/da_project1/menu.cpp || cmake_object_order_depends_target_da_project1
+  DEP_FILE = CMakeFiles\da_project1.dir\menu.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\da_project1.dir
+  OBJECT_FILE_DIR = CMakeFiles\da_project1.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target da_project1
@@ -63,7 +69,7 @@ build CMakeFiles/da_project1.dir/main.cpp.obj: CXX_COMPILER__da_project1_unscann
 #############################################
 # Link the executable da_project1.exe
 
-build da_project1.exe: CXX_EXECUTABLE_LINKER__da_project1_Debug CMakeFiles/da_project1.dir/main.cpp.obj
+build da_project1.exe: CXX_EXECUTABLE_LINKER__da_project1_Debug CMakeFiles/da_project1.dir/main.cpp.obj CMakeFiles/da_project1.dir/menu.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\da_project1.dir

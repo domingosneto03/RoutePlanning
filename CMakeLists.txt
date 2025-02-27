@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(da_project1 main.cpp
         data_structures/Graph.h
-        data_structures/MutablePriorityQueue.h)
+        data_structures/MutablePriorityQueue.h
+        menu.cpp
+        menu.h)

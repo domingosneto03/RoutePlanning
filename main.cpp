@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include "data_structures/Graph.h"
+#include "menu.h"
 
 using namespace std;
 
@@ -77,12 +78,12 @@ int main() {
 
     loadLocations(graph, "../csv_data/Locations.csv");
     loadDistances(graph, "../csv_data/Distances.csv");
+    menu();
 
     /*
      * Insert a breakpoint here and explore the graph
      */
 
-    cout << "Graph loaded with " << graph.getNumVertex() << " vertices." << endl;
     return 0;
 }
 
