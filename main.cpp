@@ -66,10 +66,7 @@ void loadDistances(Graph<T>& graph, const string& filename) {
         double walking = stod(walking_str);
 
         // Add bidirectional edges for driving and walking
-        if (driving != INF) {
-            graph.addBidirectionalEdge(loc1, loc2, driving);
-        }
-        graph.addBidirectionalEdge(loc1, loc2, walking);
+        graph.addBidirectionalEdge(loc1, loc2, driving, walking);
     }
     file.close();
 }
@@ -88,3 +85,4 @@ int main() {
     cout << "Graph loaded with " << graph.getNumVertex() << " vertices." << endl;
     return 0;
 }
+
