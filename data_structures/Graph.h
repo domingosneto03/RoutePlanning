@@ -9,8 +9,11 @@
 #include <vector>
 #include <queue>
 #include <limits>
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <unordered_map> // [!] MODIFIED
+#include <unordered_set>
 #include "../data_structures/MutablePriorityQueue.h" // not needed for now
 
 template <class T>
@@ -122,30 +125,21 @@ template <class T>
 class Graph {
 public:
     ~Graph();
-    /*
-    * Auxiliary function to find a vertex with a given the content.
-    */
     Vertex<T> *findVertex(const T &in) const;
-    /*
-     *  Adds a vertex with a given content or info (in) to a graph (this).
-     *  Returns true if successful, and false if a vertex with that content already exists.
-     */
     bool addVertex(const T &in);
     bool removeVertex(const T &in);
-
-    /*
-     * Adds an edge to a graph (this), given the contents of the source and
-     * destination vertices and the edge weight (w).
-     * Returns true if successful, and false if the source or destination vertex does not exist.
-     */
+    bool loadLocations(const std::string &filename);
+    bool loadDistances(const std::string &filename);
+    void displayGraphInfo();
+    bool findBestRoute(const T &source, const T &destination, std::vector<T> &path, double &totalTime);
+    bool findAlternativeRoute(const T &source, const T &destination, const std::vector<T> &bestPath, std::vector<T> &altPath, double &altTime);
     bool addEdge(const T &sourc, const T &dest, double dw, double ww);
     bool removeEdge(const T &source, const T &dest);
     bool addBidirectionalEdge(const T &sourc, const T &dest, double dw, double ww);
-
     int getNumVertex() const;
     std::vector<Vertex<T> *> getVertexSet() const;
-    int getIdFromCode(const std::string& code) const; // [!] MODIFIED
-    void storeCode(const std::string& code, int id); // [!] MODIFIED
+    int getIdFromCode(const std::string& code) const;
+    void storeCode(const std::string& code, int id);
 
 protected:
     std::vector<Vertex<T> *> vertexSet;    // vertex set
@@ -535,7 +529,8 @@ int Graph<T>::getIdFromCode(const std::string& code) const {
     if (it != codeToId.end()) {
         return it->second;
     }
-    return -1; // Return -1 if not found
+    std::cerr << "Warning: Code not found -> " << code << std::endl; // Debugging
+    return -1;
 }
 
 // [!] MODIFIED
@@ -566,6 +561,182 @@ template <class T>
 Graph<T>::~Graph() {
     deleteMatrix(distMatrix, vertexSet.size());
     deleteMatrix(pathMatrix, vertexSet.size());
+}
+
+// Implement Load Locations
+
+template <class T>
+bool Graph<T>::loadLocations(const std::string &filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return false;
+    }
+
+    std::string line;
+    getline(file, line); // Skip header
+    while (getline(file, line)) {
+        std::stringstream ss(line);
+        std::string location, id_str, code, parking_str;
+
+        getline(ss, location, ',');
+        getline(ss, id_str, ',');
+        getline(ss, code, ',');
+        getline(ss, parking_str, ',');
+
+        int id = stoi(id_str);
+        int parking = stoi(parking_str);
+
+        // Add vertex (node) to the graph
+        addVertex(id);
+        auto v = findVertex(id);
+        v->setLocation(location);
+        v->setCode(code);
+        v->setParking(parking);
+
+        // Store mapping from code to ID
+        storeCode(code, id);
+
+    }
+    file.close();
+    return true;
+}
+
+// Implement Load Distances
+
+template <class T>
+bool Graph<T>::loadDistances(const std::string &filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return false;
+    }
+    std::string line;
+    getline(file, line);
+    while (getline(file, line)) {
+        std::stringstream ss(line);
+        std::string loc1_code, loc2_code, driving_str, walking_str;
+        getline(ss, loc1_code, ',');
+        getline(ss, loc2_code, ',');
+        getline(ss, driving_str, ',');
+        getline(ss, walking_str, ',');
+        int loc1 = getIdFromCode(loc1_code);
+        int loc2 = getIdFromCode(loc2_code);
+        double driving = (driving_str == "X") ? INF : stod(driving_str);
+        double walking = stod(walking_str);
+        addBidirectionalEdge(loc1, loc2, driving, walking);
+    }
+    file.close();
+    return true;
+}
+
+// Display Graph Info
+
+template <class T>
+void Graph<T>::displayGraphInfo() {
+    std::cout << "Graph contains " << vertexSet.size() << " locations." << std::endl;
+    for (auto v : vertexSet) {
+        std::cout << "Location ID: " << v->getInfo() << " - " << v->getLocation() << " (" << v->getCode() << ")\n";
+        std::cout << "Connected to: ";
+        for (auto e : v->getAdj()) {
+            std::cout << e->getDest()->getInfo() << " (Weight: " << e->getDrivingWeight() << "), ";
+        }
+        std::cout << "\n";
+    }
+}
+
+
+// Implement Best Route Calculation
+
+template <class T>
+bool Graph<T>::findBestRoute(const T &source, const T &destination, std::vector<T> &path, double &totalTime) {
+    std::unordered_map<T, double> dist;
+    std::unordered_map<T, T> prev;
+    MutablePriorityQueue<Vertex<T>> pq;
+
+    for (auto v : vertexSet) {
+        dist[v->getInfo()] = INF;
+        v->setPath(nullptr);
+    }
+    dist[source] = 0;
+    pq.insert(findVertex(source));
+
+    while (!pq.empty()) {
+        Vertex<T> *u = pq.extractMin();
+        if (u->getInfo() == destination) break;
+
+        for (auto e : u->getAdj()) {
+            T v = e->getDest()->getInfo();
+            double alt = dist[u->getInfo()] + e->getDrivingWeight();
+            if (alt < dist[v]) {
+                dist[v] = alt;
+                prev[v] = u->getInfo();
+                pq.insert(findVertex(v));
+            }
+        }
+    }
+
+    if (dist[destination] == INF) return false;
+
+    T step = destination;
+    while (step != source) {
+        path.insert(path.begin(), step);
+        step = prev[step];
+    }
+    path.insert(path.begin(), source);
+    totalTime = dist[destination];
+    return true;
+}
+
+// Implement Alternative Route Calculation
+
+template <class T>
+bool Graph<T>::findAlternativeRoute(const T &source, const T &destination, const std::vector<T> &bestPath, std::vector<T> &altPath, double &altTime) {
+    std::unordered_map<T, double> dist;
+    std::unordered_map<T, T> prev;
+    MutablePriorityQueue<Vertex<T>> pq;
+
+    // Mark all nodes in the best route to avoid them (except source & destination)
+    std::unordered_set<T> forbiddenNodes(bestPath.begin(), bestPath.end());
+    forbiddenNodes.erase(source);
+    forbiddenNodes.erase(destination);
+
+    for (auto v : vertexSet) {
+        dist[v->getInfo()] = INF;
+        v->setPath(nullptr);
+    }
+    dist[source] = 0;
+    pq.insert(findVertex(source));
+
+    while (!pq.empty()) {
+        Vertex<T> *u = pq.extractMin();
+        if (u->getInfo() == destination) break;
+
+        for (auto e : u->getAdj()) {
+            T v = e->getDest()->getInfo();
+
+            // Ensure this node was not used in the best path
+            if (forbiddenNodes.find(v) != forbiddenNodes.end()) continue;
+
+            double alt = dist[u->getInfo()] + e->getDrivingWeight();
+            if (alt < dist[v]) {
+                dist[v] = alt;
+                prev[v] = u->getInfo();
+                pq.insert(findVertex(v));
+            }
+        }
+    }
+
+    if (dist[destination] == INF) return false;
+
+    T step = destination;
+    while (step != source) {
+        altPath.insert(altPath.begin(), step);
+        step = prev[step];
+    }
+    altPath.insert(altPath.begin(), source);
+    altTime = dist[destination];
+    return true;
 }
 
 #endif //DA_PROJECT1_GRAPH_H

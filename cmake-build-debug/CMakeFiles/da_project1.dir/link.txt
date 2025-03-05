@@ -1,0 +1,3 @@
+C:\Users\ruipe\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -E rm -f CMakeFiles\da_project1.dir/objects.a
+C:\Users\ruipe\AppData\Local\Programs\CLion\bin\mingw\bin\ar.exe qc CMakeFiles\da_project1.dir/objects.a @CMakeFiles\da_project1.dir\objects1.rsp
+C:\Users\ruipe\AppData\Local\Programs\CLion\bin\mingw\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\da_project1.dir/objects.a -Wl,--no-whole-archive -o da_project1.exe -Wl,--out-implib,libda_project1.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\da_project1.dir\linkLibs.rsp

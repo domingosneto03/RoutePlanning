@@ -1,3 +1,3 @@
-C:/Users/domin/Faculdade/DA/24_25/da_project1/cmake-build-debug/CMakeFiles/da_project1.dir
-C:/Users/domin/Faculdade/DA/24_25/da_project1/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/domin/Faculdade/DA/24_25/da_project1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/ruipe/FEUP/4ano_2semestre/DA/da_project1/cmake-build-debug/CMakeFiles/da_project1.dir
+C:/Users/ruipe/FEUP/4ano_2semestre/DA/da_project1/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/ruipe/FEUP/4ano_2semestre/DA/da_project1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
