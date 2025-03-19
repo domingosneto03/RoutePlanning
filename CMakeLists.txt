@@ -7,4 +7,6 @@ add_executable(da_project1 main.cpp
         data_structures/Graph.h
         data_structures/MutablePriorityQueue.h
         menu.cpp
-        menu.h)
+        menu.h
+        reader.h
+)
