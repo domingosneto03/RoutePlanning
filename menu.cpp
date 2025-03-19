@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include "menu.h"
+#include "reader.h"
+#include "data_structures/Graph.h"
 using namespace std;
 
 void displayMainMenu() {
@@ -31,6 +33,11 @@ void displayDrivingWalkingMenu() {
 }
 
 void menu() {
+    Reader<int> reader;
+    Graph<int> graph;
+
+    reader.loadLocations(graph, "../csv_data/Locations.csv");
+    reader.loadDistances(graph, "../csv_data/Distances.csv");
     string mainChoice, subChoice;
     do {
         displayMainMenu();
