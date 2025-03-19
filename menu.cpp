@@ -31,54 +31,44 @@ void displayDrivingWalkingMenu() {
 }
 
 void menu() {
-    int mainChoice, subChoice;
+    string mainChoice, subChoice;
     do {
         displayMainMenu();
         cin >> mainChoice;
 
-        switch (mainChoice) {
-            case 1:
-                do {
-                    displayDrivingMenu();
-                    cin >> subChoice;
-                    switch (subChoice) {
-                        case 1:
-                            cout << "Finding Best Driving Route...\n";
-                            break;
-                        case 2:
-                            cout << "Finding Restricted Driving Route\n";
-                            break;
-                        case 3:
-                            break;
-                        default:
-                            cout << "Invalid choice, please try again.\n";
-                    }
-                } while (subChoice != 3);
-                break;
-            case 2:
-                do {
-                    displayDrivingWalkingMenu();
-                    cin >> subChoice;
-                    switch (subChoice) {
-                        case 1:
-                            cout << "Finding Best Driving-Walking Route...\n";
-                            break;
-                        case 2:
-                            cout << "Finding Restricted Driving-Walking Route\n";
-                            break;
-                        case 3:
-                            break;
-                        default:
-                            cout << "Invalid choice, please try again.\n";
-                    }
-                } while (subChoice != 3);
-                break;
-            case 3:
-                cout << "Exiting Program...\n";
-                break;
-            default:
-                cout << "Invalid choice, please try again.\n";
+        if (mainChoice == "1") {
+            do {
+                displayDrivingMenu();
+                cin >> subChoice;
+                if (subChoice == "1") {
+                    cout << "Finding Best Driving Route...\n";
+                } else if (subChoice == "2") {
+                    cout << "Finding Restricted Driving Route\n";
+                } else if (subChoice == "3") {
+                    break;
+                } else {
+                    cout << "Invalid choice, please try again.\n";
+                }
+            } while (subChoice != "3");
+        } else if (mainChoice == "2") {
+            do {
+                displayDrivingWalkingMenu();
+                cin >> subChoice;
+                if (subChoice == "1") {
+                    cout << "Finding Best Driving-Walking Route...\n";
+                } else if (subChoice == "2") {
+                    cout << "Finding Restricted Driving-Walking Route\n";
+                } else if (subChoice == "3") {
+                    break;
+                } else {
+                    cout << "Invalid choice, please try again.\n";
+                }
+            } while (subChoice != "3");
+        } else if (mainChoice == "3") {
+            cout << "Exiting Program...\n";
+            break;
+        } else {
+            cout << "Invalid choice, please try again.\n";
         }
-    } while (mainChoice != 3);
+    } while (mainChoice != "3");
 }
-
