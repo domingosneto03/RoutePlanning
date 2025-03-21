@@ -6,6 +6,7 @@
 #include <limits>
 #include "menu.h"
 #include "reader.h"
+#include "RestrictedRoute.h"
 #include "data_structures/Graph.h"
 
 using namespace std;
@@ -225,7 +226,27 @@ void handleDrivingSubMenu(Graph<int>& graph) {
                 int includeNode  = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ");
 
                 cout << "Finding Restricted Driving Route...\n";
-                // TODO: call restricted route logic
+                auto path = restrictedDrivingRoute(graph, source, destination, avoidNodes, avoidSegs, includeNode);
+                if (path.empty()) {
+                    cout << "RestrictedDrivingRoute:none\n";
+                } else {
+                    cout << "RestrictedDrivingRoute:";
+                    int totalTime = 0;
+                    for (size_t i = 0; i < path.size(); ++i) {
+                        cout << path[i];
+                        if (i + 1 < path.size()) {
+                            cout << ",";
+                            auto u = graph.findVertex(path[i]);
+                            for (auto e : u->getAdj()) {
+                                if (e->getDest()->getInfo() == path[i+1]) {
+                                    totalTime += e->getDrivingWeight();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    cout << "(" << totalTime << ")\n";
+                }
                 break;
             }
             case 3:
@@ -268,8 +289,8 @@ void menu() {
     // Load Data
     Reader<int> reader;
     Graph<int> graph;
-    reader.loadLocations(graph, "../csv_data/Locations.csv");
-    reader.loadDistances(graph, "../csv_data/Distances.csv");
+    reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
+    reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
 
     while (true) {
         displayMainMenu();
