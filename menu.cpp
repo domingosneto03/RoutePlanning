@@ -6,6 +6,7 @@
 #include <limits>
 #include "menu.h"
 #include "reader.h"
+#include "cmake-build-debug/batch/batch.h"
 #include "RestrictedRoute.h"
 #include "data_structures/Graph.h"
 
@@ -291,6 +292,17 @@ void menu() {
     Graph<int> graph;
     reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
     reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
+
+    // Check for batch mode input
+    ifstream test("batch/input.txt");
+    if (test.is_open()) {
+        string line;
+        getline(test, line);
+        if (line.starts_with("Mode:driving")) {
+            runBatchMode_T2_2(graph);
+            return; // skip interactive menu
+        }
+    }
 
     while (true) {
         displayMainMenu();
