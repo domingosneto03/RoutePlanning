@@ -9,4 +9,8 @@ add_executable(da_project1 main.cpp
         menu.cpp
         menu.h
         reader.h
+        RestrictedRoute.cpp
+        RestrictedRoute.h
+        cmake-build-debug/batch/batch.cpp
+        cmake-build-debug/batch/batch.h
 )

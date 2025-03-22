@@ -1,0 +1,13 @@
+Location1,Location2,Driving,Walking
+N1,N2,10,20
+N1,N3,X,15
+N2,N3,5,8
+N2,N4,8,25
+N3,N5,12,10
+N3,N7,20,25
+N4,N6,16,30
+N4,N7,30,50
+N4,N8,6,18
+N5,N6,X,10
+N6,N7,X,12
+N7,N8,14,20
