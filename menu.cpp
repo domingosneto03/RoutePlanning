@@ -6,7 +6,7 @@
 #include <limits>
 #include "menu.h"
 #include "reader.h"
-#include "cmake-build-debug/batch/batch.h"
+//#include "cmake-build-debug/batch/batch.h"
 #include "RestrictedRoute.h"
 #include "data_structures/Graph.h"
 
@@ -215,7 +215,8 @@ void handleDrivingSubMenu(Graph<int>& graph) {
         switch (subVal) {
             case 1: {
                 cout << "Finding Best Driving Route...\n";
-                // TODO: implement best driving route logic
+                // TODO: implement best and alternative driving route logic
+
                 break;
             }
             case 2: {
@@ -264,7 +265,7 @@ void handleDrivingSubMenu(Graph<int>& graph) {
 void handleDrivingWalkingSubMenu(Graph<int>& graph) {
     while (true) {
         displayDrivingWalkingMenu();
-        int subVal = readIntChoice("Enter your choice: ", {1, 2, 3});
+        int subVal = readIntChoice("Enter your choice: ", {1, 2, 3, 4});
 
         switch (subVal) {
             case 1:
@@ -276,6 +277,10 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                 // TODO: implement restricted driving-walking route logic
                 break;
             case 3:
+                cout << "Finding Aproximate Solution...\n";
+                // TODO: implement aproximate solution logic
+                break;
+            case 4:
                 cout << "Returning to Main Menu...\n";
                 return; // exit sub-menu
         }
@@ -290,9 +295,11 @@ void menu() {
     // Load Data
     Reader<int> reader;
     Graph<int> graph;
-    reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
-    reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
+    reader.loadLocations(graph, "../csv_data/Locations.csv");
+    reader.loadDistances(graph, "../csv_data/Distances.csv");
 
+    // TODO: implement batch mode at the end of the project
+    /*
     // Check for batch mode input
     ifstream test("batch/input.txt");
     if (test.is_open()) {
@@ -303,6 +310,7 @@ void menu() {
             return; // skip interactive menu
         }
     }
+     */
 
     while (true) {
         displayMainMenu();
