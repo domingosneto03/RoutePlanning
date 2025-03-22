@@ -8,6 +8,7 @@
 #include "reader.h"
 //#include "cmake-build-debug/batch/batch.h"
 #include "RestrictedRoute.h"
+#include "BestRoute.h"
 #include "data_structures/Graph.h"
 
 using namespace std;
@@ -215,8 +216,37 @@ void handleDrivingSubMenu(Graph<int>& graph) {
         switch (subVal) {
             case 1: {
                 cout << "Finding Best Driving Route...\n";
-                // TODO: implement best and alternative driving route logic
+                int source = readAnyInteger("Enter Source ID: ");
+                int destination = readAnyInteger("Enter Destination ID: ");
+                double bestTime, altTime;
+                auto bestPath = findBestRoute(graph, source, destination, bestTime);
+                auto altPath = bestPath.empty() ? std::vector<int>() : findAlternativeRoute(graph, source, destination, bestPath, altTime);
 
+                cout << "Source:" << source << "\n";
+                cout << "Destination:" << destination << "\n";
+
+                if (bestPath.empty()) {
+                    cout << "BestDrivingRoute:none\n";
+                    cout << "AlternativeDrivingRoute:none\n";
+                } else {
+                    cout << "BestDrivingRoute:";
+                    for (size_t i = 0; i < bestPath.size(); ++i) {
+                        cout << bestPath[i];
+                        if (i != bestPath.size() - 1) cout << ",";
+                    }
+                    cout << "(" << bestTime << ")\n";
+
+                    if (altPath.empty()) {
+                        cout << "AlternativeDrivingRoute:none\n";
+                    } else {
+                        cout << "AlternativeDrivingRoute:";
+                        for (size_t i = 0; i < altPath.size(); ++i) {
+                            cout << altPath[i];
+                            if (i != altPath.size() - 1) cout << ",";
+                        }
+                        cout << "(" << altTime << ")\n";
+                    }
+                }
                 break;
             }
             case 2: {
@@ -295,8 +325,8 @@ void menu() {
     // Load Data
     Reader<int> reader;
     Graph<int> graph;
-    reader.loadLocations(graph, "../csv_data/Locations.csv");
-    reader.loadDistances(graph, "../csv_data/Distances.csv");
+    reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
+    reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
 
     // TODO: implement batch mode at the end of the project
     /*

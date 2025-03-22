@@ -11,4 +11,6 @@ add_executable(da_project1 main.cpp
         reader.h
         RestrictedRoute.cpp
         RestrictedRoute.h
+        BestRoute.cpp
+        BestRoute.h
 )
