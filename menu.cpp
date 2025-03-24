@@ -10,6 +10,7 @@
 #include "RestrictedRoute.h"
 #include "BestRoute.h"
 #include "data_structures/Graph.h"
+#include "EnvFriendlyRoute.h"
 
 using namespace std;
 
@@ -194,8 +195,8 @@ void displayDrivingMenu() {
 
 void displayDrivingWalkingMenu() {
     cout << "\n===== Driving and Walking Functions =====\n";
-    cout << "1. Find Best Route\n";
-    cout << "2. Find Restricted Route\n";
+    cout << "1. Find Best Driving and Walking Route\n";
+    cout << "2. Find aproximate solution\n";
     cout << "3. Back to Main Menu\n";
 }
 
@@ -298,19 +299,53 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
         int subVal = readIntChoice("Enter your choice: ", {1, 2, 3, 4});
 
         switch (subVal) {
-            case 1:
-                cout << "Finding Best Driving-Walking Route...\n";
-                // TODO: implement best driving-walking route logic
+            case 1: {
+                cout << "\n--- Environmentally-Friendly Route ---\n";
+                int source = readAnyInteger("Enter Source ID: ");
+                int destination = readAnyInteger("Enter Destination ID: ");
+                double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ");
+                auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
+                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ");
+
+                EnvFriendlyRoute route = findEnvFriendlyRoute(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
+
+
+                cout << "Source:" << source << "\n";
+                cout << "Destination:" << destination << "\n";
+
+                if (route.parkingNode == -1) {
+                    cout << "DrivingRoute:\n";
+                    cout << "ParkingNode:\n";
+                    cout << "WalkingRoute:\n";
+                    cout << "TotalTime:\n";
+                    cout << "Message:" << route.message << "\n";
+                } else {
+                    cout << "DrivingRoute:";
+                    for (size_t i = 0; i < route.drivingPath.size(); ++i) {
+                        cout << route.drivingPath[i];
+                        if (i + 1 < route.drivingPath.size()) cout << ",";
+                    }
+                    cout << "(" << route.drivingTime << ")\n";
+
+                    cout << "ParkingNode:" << route.parkingNode << "\n";
+
+                    cout << "WalkingRoute:";
+                    for (size_t i = 0; i < route.walkingPath.size(); ++i) {
+                        cout << route.walkingPath[i];
+                        if (i + 1 < route.walkingPath.size()) cout << ",";
+                    }
+                    cout << "(" << route.walkingTime << ")\n";
+
+                    cout << "TotalTime:" << route.totalTime << "\n";
+                }
                 break;
+            }
+
             case 2:
-                cout << "Finding Restricted Driving-Walking Route...\n";
-                // TODO: implement restricted driving-walking route logic
-                break;
-            case 3:
                 cout << "Finding Aproximate Solution...\n";
                 // TODO: implement aproximate solution logic
                 break;
-            case 4:
+            case 3:
                 cout << "Returning to Main Menu...\n";
                 return; // exit sub-menu
         }
@@ -325,8 +360,8 @@ void menu() {
     // Load Data
     Reader<int> reader;
     Graph<int> graph;
-    reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
-    reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
+    reader.loadLocations(graph, "../csv_data/Locations.csv");
+    reader.loadDistances(graph, "../csv_data/Distances.csv");
 
     // TODO: implement batch mode at the end of the project
     /*
