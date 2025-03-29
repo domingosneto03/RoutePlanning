@@ -1,69 +1,36 @@
 #include "EnvFriendlyRoute.h"
-#include "data_structures/Graph.h"
 #include <queue>
+#include <unordered_map>
 #include <unordered_set>
-#include <algorithm>
 #include <limits>
+#include <algorithm>
 
 using namespace std;
 
-bool isParking(Vertex<int>* v) {
-    return v && v->getParking() == 1;
+bool isAvoided(int node, const vector<int>& avoidNodes) {
+    return find(avoidNodes.begin(), avoidNodes.end(), node) != avoidNodes.end();
 }
 
-// Modified Dijkstra to find multiple driving routes to parking spots
-vector<EnvFriendlyRoute> findMultipleDrivingRoutes(Graph<int>& g, int source, int destination, int k,
-                                                   const vector<int>& avoidNodes, const vector<pair<int, int>>& avoidSegments) {
+bool isBlocked(int u, int v, const vector<pair<int, int>>& avoidSegments) {
+    return find(avoidSegments.begin(), avoidSegments.end(), make_pair(u, v)) != avoidSegments.end() ||
+           find(avoidSegments.begin(), avoidSegments.end(), make_pair(v, u)) != avoidSegments.end();
+}
 
-    struct State {
-        int node;
-        vector<int> path;
-        double time;
-
-        bool operator>(const State& other) const {
-            return time > other.time;
-        }
-    };
-
-    priority_queue<State, vector<State>, greater<>> pq;
-    pq.push({source, {source}, 0});
-
-    unordered_map<int, int> pathsFound;
-    vector<EnvFriendlyRoute> results;
-
-    while (!pq.empty()) {
-        auto [node, path, time] = pq.top(); pq.pop();
-
-        Vertex<int>* v = g.findVertex(node);
-        if (!v || find(avoidNodes.begin(), avoidNodes.end(), node) != avoidNodes.end()) continue;
-
-        if (isParking(v) && node != destination) {
-            pathsFound[node]++;
-            if (pathsFound[node] <= k) {
-                results.push_back({node, time, 0, 0, path, {}});
-            }
-        }
-
-        for (auto e : v->getAdj()) {
-            int next = e->getDest()->getInfo();
-            if (e->getDrivingWeight() == INF) continue;
-            if (find(path.begin(), path.end(), next) != path.end()) continue;
-            if (find(avoidNodes.begin(), avoidNodes.end(), next) != avoidNodes.end()) continue;
-
-            if (find(avoidSegments.begin(), avoidSegments.end(), make_pair(node, next)) != avoidSegments.end() ||
-                find(avoidSegments.begin(), avoidSegments.end(), make_pair(next, node)) != avoidSegments.end()) continue;
-
-            vector<int> newPath = path;
-            newPath.push_back(next);
-            pq.push({next, newPath, time + e->getDrivingWeight()});
-        }
+vector<int> reconstructPath(int src, int tgt, unordered_map<int, int>& prev) {
+    vector<int> path;
+    for (int at = tgt; at != src; at = prev[at]) {
+        path.push_back(at);
     }
-
-    return results;
+    path.push_back(src);
+    reverse(path.begin(), path.end());
+    return path;
 }
 
-pair<vector<int>, double> findWalkingPath(Graph<int>& g, int source, int destination, double maxWalk,
-                                          const vector<int>& avoidNodes, const vector<pair<int, int>>& avoidSegments) {
+unordered_map<int, pair<double, vector<int>>> runDijkstra(
+        Graph<int>& g, int start,
+        bool useDriving,
+        const vector<int>& avoidNodes,
+        const vector<pair<int, int>>& avoidSegments) {
 
     unordered_map<int, double> dist;
     unordered_map<int, int> prev;
@@ -72,61 +39,73 @@ pair<vector<int>, double> findWalkingPath(Graph<int>& g, int source, int destina
     for (auto v : g.getVertexSet()) {
         dist[v->getInfo()] = INF;
     }
-    dist[source] = 0;
-    pq.push({0, source});
+
+    dist[start] = 0;
+    pq.emplace(0, start);
 
     while (!pq.empty()) {
-        auto [d, u] = pq.top(); pq.pop();
+        auto [cost, u] = pq.top(); pq.pop();
 
-        if (d > maxWalk) break;
-        if (u == destination) break;
-        if (find(avoidNodes.begin(), avoidNodes.end(), u) != avoidNodes.end()) continue;
-
+        if (isAvoided(u, avoidNodes)) continue;
         Vertex<int>* v = g.findVertex(u);
         if (!v) continue;
 
         for (auto e : v->getAdj()) {
             int next = e->getDest()->getInfo();
-            double w = e->getWalkingWeight();
+            if (isAvoided(next, avoidNodes)) continue;
+            if (isBlocked(u, next, avoidSegments)) continue;
 
-            if (find(avoidNodes.begin(), avoidNodes.end(), next) != avoidNodes.end()) continue;
-            if (find(avoidSegments.begin(), avoidSegments.end(), make_pair(u, next)) != avoidSegments.end() ||
-                find(avoidSegments.begin(), avoidSegments.end(), make_pair(next, u)) != avoidSegments.end()) continue;
+            double weight = useDriving ? e->getDrivingWeight() : e->getWalkingWeight();
+            if (weight >= INF) continue;
 
-            if (dist[next] > dist[u] + w) {
-                dist[next] = dist[u] + w;
+            if (dist[next] > dist[u] + weight) {
+                dist[next] = dist[u] + weight;
                 prev[next] = u;
-                pq.push({dist[next], next});
+                pq.emplace(dist[next], next);
             }
         }
     }
 
-    if (dist[destination] == INF || dist[destination] > maxWalk) {
-        return {{}, INF};
+    unordered_map<int, pair<double, vector<int>>> result;
+    for (auto& [node, d] : dist) {
+        if (d < INF && node != start && prev.count(node)) {
+            result[node] = {d, reconstructPath(start, node, prev)};
+        }
     }
 
-    vector<int> path;
-    for (int at = destination; at != source; at = prev[at]) {
-        path.push_back(at);
-    }
-    path.push_back(source);
-    reverse(path.begin(), path.end());
-
-    return {path, dist[destination]};
+    return result;
 }
 
-EnvFriendlyRoute findEnvFriendlyRoute(Graph<int>& g, int source, int destination, double maxWalk,
-                                      const vector<int>& avoidNodes, const vector<pair<int, int>>& avoidSegments) {
+EnvFriendlyRoute findEnvFriendlyRoute(
+        Graph<int>& g,
+        int source,
+        int destination,
+        double maxWalk,
+        const vector<int>& avoidNodes,
+        const vector<pair<int, int>>& avoidSegments) {
 
-    vector<EnvFriendlyRoute> candidates = findMultipleDrivingRoutes(g, source, destination, 3, avoidNodes, avoidSegments);
+    auto driveMap = runDijkstra(g, source, true, avoidNodes, avoidSegments);
+    auto walkMap = runDijkstra(g, destination, false, avoidNodes, avoidSegments); // reversed Dijkstra
+
     vector<EnvFriendlyRoute> valid;
 
-    for (auto& c : candidates) {
-        auto [walkPath, walkTime] = findWalkingPath(g, c.parkingNode, destination, maxWalk, avoidNodes, avoidSegments);
-        if (!walkPath.empty()) {
-            double total = c.drivingTime + walkTime;
-            valid.push_back({c.parkingNode, c.drivingTime, walkTime, total, c.drivingPath, walkPath});
-        }
+    for (auto& [parkingNode, driveInfo] : driveMap) {
+        Vertex<int>* pv = g.findVertex(parkingNode);
+        if (!pv || pv->getParking() != 1) continue;
+
+        if (!walkMap.count(parkingNode)) continue;
+        auto [walkTime, walkPath] = walkMap[parkingNode];
+        if (walkTime > maxWalk) continue;
+        reverse(walkPath.begin(), walkPath.end());
+        double totalTime = driveInfo.first + walkTime;
+        valid.push_back({
+                                parkingNode,
+                                driveInfo.first,
+                                walkTime,
+                                totalTime,
+                                driveInfo.second,
+                                walkPath
+                        });
     }
 
     if (valid.empty()) {
