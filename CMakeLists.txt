@@ -15,4 +15,5 @@ add_executable(da_project1 main.cpp
         BestRoute.h
         EnvFriendlyRoute.cpp
         EnvFriendlyRoute.h
+        AlternativeRoute.cpp
 )
