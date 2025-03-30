@@ -279,14 +279,20 @@ void handleDrivingSubMenu(Graph<int>& graph) {
                     if (destination != source) break;
                     cout << "Destination must be different from source. Try again.\n";
                 }
-                auto avoidNodes  = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                vector<int> avoidNodes;
+                while (true) {
+                    avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                    if (find(avoidNodes.begin(), avoidNodes.end(), source) != avoidNodes.end() || find(avoidNodes.begin(), avoidNodes.end(), destination) != avoidNodes.end()) {
+                        cout << "Source and Destination cannot be in the set of nodes to avoid. Please try again.\n";
+                        continue;
+                    }
+                    break;
+                }
                 auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
                 int includeNode;
                 while (true) {
                     includeNode = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ", graph);
-                    if (includeNode == -1 || find(avoidNodes.begin(), avoidNodes.end(), includeNode) == avoidNodes.end()) {
-                        break;
-                    }
+                    if (includeNode == -1 || find(avoidNodes.begin(), avoidNodes.end(), includeNode) == avoidNodes.end()) break;
                     cout << "Include node cannot be in the set of nodes to avoid. Please try again.\n";
                 }
 
@@ -341,7 +347,15 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                     cout << "Destination must be different from source. Try again.\n";
                 }
                 double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ", graph);
-                auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                vector<int> avoidNodes;
+                while (true) {
+                    avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                    if (find(avoidNodes.begin(), avoidNodes.end(), source) != avoidNodes.end() || find(avoidNodes.begin(), avoidNodes.end(), destination) != avoidNodes.end()) {
+                        cout << "Source and Destination cannot be in the set of nodes to avoid. Please try again.\n";
+                        continue;
+                    }
+                    break;
+                }
                 auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
 
                 EnvFriendlyRoute route = findEnvFriendlyRoute(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
