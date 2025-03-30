@@ -16,4 +16,5 @@ add_executable(da_project1 main.cpp
         EnvFriendlyRoute.cpp
         EnvFriendlyRoute.h
         AlternativeRoute.cpp
+        cmake-build-debug/batch/batch.h
 )

@@ -117,7 +117,7 @@ EnvFriendlyRoute findEnvFriendlyRoute(
     }
 
 
-    if (valid.empty()) {
+    if (validRoutes.empty()) {
         bool anyParkingCandidate = false;
         bool anyWalkableCandidate = false;
 
