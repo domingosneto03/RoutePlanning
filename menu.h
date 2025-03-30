@@ -11,27 +11,29 @@ using namespace std;
  * Reads an integer from user, ensuring it's among validChoices.
  * Loops until a valid integer choice is entered.
  */
-int readIntChoice(const string &prompt, vector<int> &validChoices);
+int readIntChoice(const string &prompt, const vector<int> &validChoices);
 
 /**
  * Reads any integer from user input.
  * Loops until a valid integer is provided.
  */
-int readAnyInteger(const string &prompt);
+int readAnyInteger(const string &prompt, const Graph<int>& graph);
 
 /**
  * Reads a line of comma-separated integers from the user.
  * Returns an empty vector if line is blank.
  * Loops until all tokens are valid integers.
  */
-vector<int> readCommaSeparatedInts(const string &prompt);
+vector<int> readCommaSeparatedInts(const string &prompt, const Graph<int>& graph);
 
 /**
  * Reads space-separated segments in the format (id1,id2).
  * Returns an empty vector if the user inputs a blank line.
  * Loops until all tokens are valid (id1,id2).
  */
-vector<pair<int,int>> readSegments(const string &prompt);
+vector<pair<int,int>> readSegments(const string &prompt, const Graph<int>& graph);
+
+bool isValidNode(const Graph<int>& graph, int id);
 
 /**
  * Displays the main menu (Driving Only / Driving & Walking / Exit).

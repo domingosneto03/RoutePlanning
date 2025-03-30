@@ -52,7 +52,7 @@ int readIntChoice(const string &prompt, const vector<int> &validChoices) {
  * Reads any integer from user input.
  * Loops until a valid integer is provided (no set of valid choices).
  */
-int readAnyInteger(const string &prompt) {
+int readAnyInteger(const string &prompt, const Graph<int>& graph) {
     while (true) {
         cout << prompt;
         string input;
@@ -60,7 +60,11 @@ int readAnyInteger(const string &prompt) {
 
         try {
             int val = stoi(input);
-            return val;
+            if (isValidNode(graph, val) || (val==-1 && prompt.starts_with("Enter a Node to Include"))) {
+                return val;
+            } else {
+                cout << "Node id " << val << " does not exist in the graph. Try again.\n";
+            }
         } catch (...) {
             cout << "Invalid integer. Please try again.\n";
         }
@@ -72,7 +76,7 @@ int readAnyInteger(const string &prompt) {
  * Returns an empty vector if the line is blank.
  * If any token is invalid, the user is prompted to retry.
  */
-vector<int> readCommaSeparatedInts(const string &prompt) {
+vector<int> readCommaSeparatedInts(const string &prompt, const Graph<int>& graph) {
     while (true) {
         cout << prompt;
         // clear leftover newline if present
@@ -95,6 +99,11 @@ vector<int> readCommaSeparatedInts(const string &prompt) {
         while (getline(ss, token, ',')) {
             try {
                 int v = stoi(token);
+                if (!isValidNode(graph, v)) {
+                    cout << "Node id " << v << " does not exist in the graph.\n";
+                    valid = false;
+                    break;
+                }
                 results.push_back(v);
             } catch (...) {
                 cout << "Invalid integer in list: \"" << token << "\". Please try again.\n";
@@ -115,7 +124,7 @@ vector<int> readCommaSeparatedInts(const string &prompt) {
  * Returns an empty vector if the user inputs a blank line.
  * If any token is invalid, prompt is repeated.
  */
-vector<pair<int,int>> readSegments(const string &prompt) {
+vector<pair<int,int>> readSegments(const string &prompt, const Graph<int>& graph) {
     while (true) {
         cout << prompt;
 
@@ -155,6 +164,11 @@ vector<pair<int,int>> readSegments(const string &prompt) {
             try {
                 int i1 = stoi(id1);
                 int i2 = stoi(id2);
+                if (!isValidNode(graph, i1) || !isValidNode(graph, i2)) {
+                    cout << "Segment contains node not in graph: (" << i1 << "," << i2 << ")\n";
+                    valid = false;
+                    break;
+                }
                 segments.emplace_back(i1, i2);
             } catch (...) {
                 cout << "Invalid integer in segment: (" << id1 << "," << id2 << ").\n";
@@ -169,6 +183,11 @@ vector<pair<int,int>> readSegments(const string &prompt) {
         // otherwise, prompt again
     }
 }
+
+bool isValidNode(const Graph<int>& graph, int id) {
+    return graph.findVertex(id) != nullptr;
+}
+
 
 // ----------------------------------------------------------
 // DISPLAY FUNCTIONS
@@ -213,8 +232,8 @@ void handleDrivingSubMenu(Graph<int>& graph) {
         switch (subVal) {
             case 1: {
                 cout << "Finding Best Driving Route...\n";
-                int source = readAnyInteger("Enter Source ID: ");
-                int destination = readAnyInteger("Enter Destination ID: ");
+                int source = readAnyInteger("Enter Source ID: ", graph);
+                int destination = readAnyInteger("Enter Destination ID: ", graph);
                 double bestTime, altTime;
                 auto bestPath = findBestRoute(graph, source, destination, bestTime);
                 auto altPath = bestPath.empty() ? std::vector<int>() : findAlternativeRoute(graph, source, destination, bestPath, altTime);
@@ -248,11 +267,11 @@ void handleDrivingSubMenu(Graph<int>& graph) {
             }
             case 2: {
                 cout << "\n--- Restricted Driving Route ---\n";
-                int source       = readAnyInteger("Enter Source ID: ");
-                int destination  = readAnyInteger("Enter Destination ID: ");
-                auto avoidNodes  = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
-                auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ");
-                int includeNode  = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ");
+                int source       = readAnyInteger("Enter Source ID: ", graph);
+                int destination  = readAnyInteger("Enter Destination ID: ", graph);
+                auto avoidNodes  = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
+                int includeNode  = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ", graph);
 
                 cout << "Finding Restricted Driving Route...\n";
                 auto path = restrictedDrivingRoute(graph, source, destination, avoidNodes, avoidSegs, includeNode);
@@ -297,11 +316,11 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
         switch (subVal) {
             case 1: {
                 cout << "\n--- Environmentally-Friendly Route ---\n";
-                int source = readAnyInteger("Enter Source ID: ");
-                int destination = readAnyInteger("Enter Destination ID: ");
-                double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ");
-                auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
-                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ");
+                int source = readAnyInteger("Enter Source ID: ", graph);
+                int destination = readAnyInteger("Enter Destination ID: ", graph);
+                double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ", graph);
+                auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
 
                 EnvFriendlyRoute route = findEnvFriendlyRoute(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
 
