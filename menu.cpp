@@ -423,11 +423,23 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                 cout << "Finding Approximate Solution...\n";
 
                 // User input for alternative route options
-                int source = readAnyInteger("Enter Source ID: ");
-                int destination = readAnyInteger("Enter Destination ID: ");
-                double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ");
-                auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
-                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ");
+                int source; int destination;
+                while (true) {
+                    source = readAnyInteger("Enter Source ID: ", graph);
+                    destination = readAnyInteger("Enter Destination ID: ", graph);
+                    if (isValidEnv(graph, source, destination)) break;
+                }
+                double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ", graph);
+                vector<int> avoidNodes;
+                while (true) {
+                    avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
+                    if (find(avoidNodes.begin(), avoidNodes.end(), source) != avoidNodes.end() || find(avoidNodes.begin(), avoidNodes.end(), destination) != avoidNodes.end()) {
+                        cout << "Source and Destination cannot be in the set of nodes to avoid. Please try again.\n";
+                        continue;
+                    }
+                    break;
+                }
+                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ", graph);
 
                 // Fetch alternative routes
                 auto alternatives = AlternativeRoute::findTwoSolutions(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
