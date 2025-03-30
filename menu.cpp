@@ -281,7 +281,14 @@ void handleDrivingSubMenu(Graph<int>& graph) {
                 }
                 auto avoidNodes  = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
                 auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
-                int includeNode  = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ", graph);
+                int includeNode;
+                while (true) {
+                    includeNode = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ", graph);
+                    if (includeNode == -1 || find(avoidNodes.begin(), avoidNodes.end(), includeNode) == avoidNodes.end()) {
+                        break;
+                    }
+                    cout << "Include node cannot be in the set of nodes to avoid. Please try again.\n";
+                }
 
                 cout << "Finding Restricted Driving Route...\n";
                 auto path = restrictedDrivingRoute(graph, source, destination, avoidNodes, avoidSegs, includeNode);
