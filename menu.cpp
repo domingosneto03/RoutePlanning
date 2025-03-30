@@ -118,10 +118,6 @@ vector<int> readCommaSeparatedInts(const string &prompt) {
 vector<pair<int,int>> readSegments(const string &prompt) {
     while (true) {
         cout << prompt;
-        // clear leftover newline if present
-        if (cin.peek() == '\n') {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
 
         string line;
         getline(cin, line);
@@ -255,7 +251,7 @@ void handleDrivingSubMenu(Graph<int>& graph) {
                 int source       = readAnyInteger("Enter Source ID: ");
                 int destination  = readAnyInteger("Enter Destination ID: ");
                 auto avoidNodes  = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
-                auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ");
+                auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ");
                 int includeNode  = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ");
 
                 cout << "Finding Restricted Driving Route...\n";
@@ -305,7 +301,7 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                 int destination = readAnyInteger("Enter Destination ID: ");
                 double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ");
                 auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
-                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ");
+                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ");
 
                 EnvFriendlyRoute route = findEnvFriendlyRoute(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
 
