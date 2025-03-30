@@ -233,7 +233,12 @@ void handleDrivingSubMenu(Graph<int>& graph) {
             case 1: {
                 cout << "Finding Best Driving Route...\n";
                 int source = readAnyInteger("Enter Source ID: ", graph);
-                int destination = readAnyInteger("Enter Destination ID: ", graph);
+                int destination;
+                while (true) {
+                    destination = readAnyInteger("Enter Destination ID: ", graph);
+                    if (destination != source) break;
+                    cout << "Destination must be different from source. Try again.\n";
+                }
                 double bestTime, altTime;
                 auto bestPath = findBestRoute(graph, source, destination, bestTime);
                 auto altPath = bestPath.empty() ? std::vector<int>() : findAlternativeRoute(graph, source, destination, bestPath, altTime);
@@ -268,7 +273,12 @@ void handleDrivingSubMenu(Graph<int>& graph) {
             case 2: {
                 cout << "\n--- Restricted Driving Route ---\n";
                 int source       = readAnyInteger("Enter Source ID: ", graph);
-                int destination  = readAnyInteger("Enter Destination ID: ", graph);
+                int destination;
+                while (true) {
+                    destination = readAnyInteger("Enter Destination ID: ", graph);
+                    if (destination != source) break;
+                    cout << "Destination must be different from source. Try again.\n";
+                }
                 auto avoidNodes  = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
                 auto avoidSegs   = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
                 int includeNode  = readAnyInteger("Enter a Node to Include in Route (or -1 if none): ", graph);
@@ -317,7 +327,12 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
             case 1: {
                 cout << "\n--- Environmentally-Friendly Route ---\n";
                 int source = readAnyInteger("Enter Source ID: ", graph);
-                int destination = readAnyInteger("Enter Destination ID: ", graph);
+                int destination;
+                while (true) {
+                    destination = readAnyInteger("Enter Destination ID: ", graph);
+                    if (destination != source) break;
+                    cout << "Destination must be different from source. Try again.\n";
+                }
                 double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ", graph);
                 auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ", graph);
                 auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2) space-separated, blank if none): ", graph);
