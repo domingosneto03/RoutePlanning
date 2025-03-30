@@ -11,6 +11,7 @@
 #include "BestRoute.h"
 #include "data_structures/Graph.h"
 #include "EnvFriendlyRoute.h"
+#include "AlternativeRoute.h"
 
 using namespace std;
 
@@ -418,10 +419,47 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                 break;
             }
 
-            case 2:
-                cout << "Finding Aproximate Solution...\n";
-                // TODO: implement aproximate solution logic
+            case 2: {
+                cout << "Finding Approximate Solution...\n";
+
+                // User input for alternative route options
+                int source = readAnyInteger("Enter Source ID: ");
+                int destination = readAnyInteger("Enter Destination ID: ");
+                double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ");
+                auto avoidNodes = readCommaSeparatedInts("Enter Nodes to Avoid (comma-separated, leave blank if none): ");
+                auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ");
+
+                // Fetch alternative routes
+                auto alternatives = AlternativeRoute::findTwoSolutions(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
+
+                if (!alternatives.empty()) {
+                    cout << "Source:" << source << "\n";
+                    cout << "Destination:" << destination << "\n";
+                    for (size_t i = 0; i < alternatives.size(); ++i) {
+                        cout << "DrivingRoute" << (i + 1) << ": ";
+                        for (size_t j = 0; j < alternatives[i].drivingPath.size(); ++j) {
+                            cout << alternatives[i].drivingPath[j];
+                            if (j + 1 < alternatives[i].drivingPath.size()) cout << ",";
+                        }
+                        cout << "(" << alternatives[i].drivingTime << ")\n";
+
+                        cout << "ParkingNode" << (i + 1) << ": " << alternatives[i].parkingNode << "\n";
+
+                        cout << "WalkingRoute" << (i + 1) << ": ";
+                        for (size_t j = 0; j < alternatives[i].walkingPath.size(); ++j) {
+                            cout << alternatives[i].walkingPath[j];
+                            if (j + 1 < alternatives[i].walkingPath.size()) cout << ",";
+                        }
+                        cout << "(" << alternatives[i].walkingTime << ")\n";
+
+                        cout << "TotalTime" << (i + 1) << ": " << alternatives[i].totalTime << "\n";
+                    }
+                } else {
+                    cout << "No alternative routes found.\n";
+                }
                 break;
+            }
+
             case 3:
                 cout << "Returning to Main Menu...\n";
                 return; // exit sub-menu

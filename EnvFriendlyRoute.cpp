@@ -81,32 +81,41 @@ EnvFriendlyRoute findEnvFriendlyRoute(
         int source,
         int destination,
         double maxWalk,
-        const vector<int>& avoidNodes,
-        const vector<pair<int, int>>& avoidSegments) {
+        const std::vector<int>& avoidNodes,
+        const std::vector<std::pair<int, int>>& avoidSegments) {
 
-    auto driveMap = runDijkstra(g, source, true, avoidNodes, avoidSegments);
-    auto walkMap = runDijkstra(g, destination, false, avoidNodes, avoidSegments); // reversed Dijkstra
+    // Run Dijkstra for both driving and walking paths
+    auto driveMap = runDijkstra(g, source, true, avoidNodes, avoidSegments); // Driving route
+    auto walkMap = runDijkstra(g, destination, false, avoidNodes, avoidSegments); // Reversed Walking route
 
-    vector<EnvFriendlyRoute> valid;
+    std::vector<EnvFriendlyRoute> validRoutes;
 
+    // Try to find valid routes with driving + walking
     for (auto& [parkingNode, driveInfo] : driveMap) {
         Vertex<int>* pv = g.findVertex(parkingNode);
-        if (!pv || pv->getParking() != 1) continue;
+        if (!pv || pv->getParking() != 1) continue; // Skip nodes that are not parking nodes
 
-        if (!walkMap.count(parkingNode)) continue;
+        if (!walkMap.count(parkingNode)) continue; // Skip if no walking path from this parking node
         auto [walkTime, walkPath] = walkMap[parkingNode];
-        if (walkTime > maxWalk) continue;
-        reverse(walkPath.begin(), walkPath.end());
+
+        if (walkTime > maxWalk) continue; // Skip if walking time exceeds maximum allowed
+
+        reverse(walkPath.begin(), walkPath.end()); // Reverse walking path to go from parking to destination
+
+        // Calculate the total time (driving + walking)
         double totalTime = driveInfo.first + walkTime;
-        valid.push_back({
-                                parkingNode,
-                                driveInfo.first,
-                                walkTime,
-                                totalTime,
-                                driveInfo.second,
-                                walkPath
-                        });
+
+        // Add the valid route (driving + walking path)
+        validRoutes.push_back({
+            parkingNode,
+            driveInfo.first,
+            walkTime,
+            totalTime,
+            driveInfo.second,
+            walkPath
+        });
     }
+
 
     if (valid.empty()) {
         bool anyParkingCandidate = false;
@@ -138,15 +147,17 @@ EnvFriendlyRoute findEnvFriendlyRoute(
         return EnvFriendlyRoute{-1, 0, 0, 0, {}, {}, reason};
     }
 
-    sort(valid.begin(), valid.end(), [](const auto& a, const auto& b) {
+    // Sort the valid routes first by total time, then by walking time (descending)
+    sort(validRoutes.begin(), validRoutes.end(), [](const auto& a, const auto& b) {
         if (a.totalTime != b.totalTime) return a.totalTime < b.totalTime;
-        return a.walkingTime > b.walkingTime;
+        return a.walkingTime > b.walkingTime; // Prefer routes with less walking time
     });
 
-    EnvFriendlyRoute best = valid[0];
-    for (size_t i = 1; i < valid.size(); ++i) {
-        best.alternatives.push_back(valid[i]);
+    // Prepare the best route and alternatives (limit to 2 alternatives)
+    EnvFriendlyRoute bestRoute = validRoutes[0]; // The best route
+    for (size_t i = 1; i < validRoutes.size() && i < 2; ++i) {
+        bestRoute.alternatives.push_back(validRoutes[i]); // Add second alternative if exists
     }
 
-    return best;
+    return bestRoute;
 }
