@@ -60,7 +60,7 @@ int readAnyInteger(const string &prompt, const Graph<int>& graph) {
 
         try {
             int val = stoi(input);
-            if (isValidNode(graph, val) || (val==-1 && prompt.starts_with("Enter a Node to Include"))) {
+            if (isValidNode(graph, val) || (val==-1 && prompt.starts_with("Enter a Node to Include")) || prompt.starts_with("Enter Max Walking Time")) {
                 return val;
             } else {
                 cout << "Node id " << val << " does not exist in the graph. Try again.\n";
@@ -187,6 +187,33 @@ vector<pair<int,int>> readSegments(const string &prompt, const Graph<int>& graph
 bool isValidNode(const Graph<int>& graph, int id) {
     return graph.findVertex(id) != nullptr;
 }
+
+bool isValidEnv(const Graph<int>& graph, int source, int destination) {
+    if (source == destination) {
+        cout << "Destination must be different from source. Try again.\n";
+        return false;
+    }
+
+    Vertex<int>* src = graph.findVertex(source);
+    Vertex<int>* dst = graph.findVertex(destination);
+
+    if (!src || !dst) return false;
+
+    if (src->getParking() == 1 || dst->getParking() == 1) {
+        cout << "Source and Destination cannot be parking nodes. Try again.\n";
+        return false;
+    }
+
+    for (auto e : src->getAdj()) {
+        if (e->getDest()->getInfo() == destination) {
+            cout << "Source and Destination cannot be directly connected. Try again.\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 
 // ----------------------------------------------------------
@@ -339,12 +366,11 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
         switch (subVal) {
             case 1: {
                 cout << "\n--- Environmentally-Friendly Route ---\n";
-                int source = readAnyInteger("Enter Source ID: ", graph);
-                int destination;
+                int source; int destination;
                 while (true) {
+                    source = readAnyInteger("Enter Source ID: ", graph);
                     destination = readAnyInteger("Enter Destination ID: ", graph);
-                    if (destination != source) break;
-                    cout << "Destination must be different from source. Try again.\n";
+                    if (isValidEnv(graph, source, destination)) break;
                 }
                 double maxWalk = readAnyInteger("Enter Max Walking Time (minutes): ", graph);
                 vector<int> avoidNodes;
@@ -365,9 +391,9 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                 cout << "Destination:" << destination << "\n";
 
                 if (route.parkingNode == -1) {
-                    cout << "DrivingRoute:\n";
-                    cout << "ParkingNode:\n";
-                    cout << "WalkingRoute:\n";
+                    cout << "DrivingRoute:none\n";
+                    cout << "ParkingNode:none\n";
+                    cout << "WalkingRoute:none\n";
                     cout << "TotalTime:\n";
                     cout << "Message:" << route.message << "\n";
                 } else {
@@ -411,8 +437,8 @@ void menu() {
     // Load Data
     Reader<int> reader;
     Graph<int> graph;
-    reader.loadLocations(graph, "../csv_data/Locations.csv");
-    reader.loadDistances(graph, "../csv_data/Distances.csv");
+    reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
+    reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
 
     // TODO: implement batch mode at the end of the project
     /*

@@ -35,6 +35,8 @@ vector<pair<int,int>> readSegments(const string &prompt, const Graph<int>& graph
 
 bool isValidNode(const Graph<int>& graph, int id);
 
+bool isValidEnv(const Graph<int>& graph, int source, int destination);
+
 /**
  * Displays the main menu (Driving Only / Driving & Walking / Exit).
  */
