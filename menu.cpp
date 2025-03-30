@@ -353,7 +353,7 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
                 auto avoidSegs  = readSegments("Enter Segments to Avoid (format: (id1,id2), space-separated, blank if none): ");
 
                 // Fetch alternative routes
-                auto alternatives = AlternativeRoute::findAlternatives(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
+                auto alternatives = AlternativeRoute::findTwoSolutions(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
 
                 if (!alternatives.empty()) {
                     cout << "Source:" << source << "\n";

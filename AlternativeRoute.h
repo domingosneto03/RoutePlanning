@@ -2,14 +2,14 @@
 #define ALTERNATIVEROUTE_H
 
 #include <vector>
-#include <utility> // For std::pair
+#include <utility>  // For std::pair
 #include "EnvFriendlyRoute.h"
 #include "data_structures/Graph.h"
 
 class AlternativeRoute {
 public:
-    // Declare the function
-    static std::vector<EnvFriendlyRoute> findAlternatives(
+    // Declare the function to find alternative routes
+    static std::vector<EnvFriendlyRoute> findTwoSolutions(
         Graph<int>& graph,
         int source,
         int destination,
