@@ -4,9 +4,11 @@
 #include <sstream>
 #include <algorithm>
 #include <limits>
+#include <fstream>
+#include <filesystem>
 #include "menu.h"
 #include "reader.h"
-//#include "cmake-build-debug/batch/batch.h"
+#include "cmake-build-debug/batch/batch.h"
 #include "RestrictedRoute.h"
 #include "BestRoute.h"
 #include "data_structures/Graph.h"
@@ -480,6 +482,163 @@ void handleDrivingWalkingSubMenu(Graph<int>& graph) {
 }
 
 // ----------------------------------------------------------
+// BATCH MODE
+// ----------------------------------------------------------
+
+void runBatchMode(Graph<int>& graph) {
+    ifstream inFile("batch/input.txt");
+    ofstream outFile("batch/output.txt");
+    if (!inFile.is_open() || !outFile.is_open()) return;
+
+    string line;
+    while (getline(inFile, line)) {
+        if (line.starts_with("Mode:")) {
+            string mode = line.substr(5);
+
+            // Shared variables
+            int source = -1, destination = -1, includeNode = -1;
+            double maxWalk = 0;
+            vector<int> avoidNodes;
+            vector<pair<int, int>> avoidSegs;
+
+            // Read block
+            while (getline(inFile, line) && !line.starts_with("---")) {
+                if (line.starts_with("Source:")) {
+                    source = stoi(line.substr(7));
+                } else if (line.starts_with("Destination:")) {
+                    destination = stoi(line.substr(12));
+                } else if (line.starts_with("AvoidNodes:")) {
+                    avoidNodes.clear();
+                    string nodes = line.substr(11);
+                    stringstream ss(nodes);
+                    string tok;
+                    while (getline(ss, tok, ',')) {
+                        if (!tok.empty()) avoidNodes.push_back(stoi(tok));
+                    }
+                } else if (line.starts_with("AvoidSegments:")) {
+                    avoidSegs.clear();
+                    string segments = line.substr(14);
+                    stringstream ss(segments);
+                    string seg;
+                    while (ss >> seg) {
+                        if (seg.front() == '(' && seg.back() == ')') {
+                            seg = seg.substr(1, seg.size() - 2);
+                            size_t comma = seg.find(',');
+                            if (comma != string::npos) {
+                                int a = stoi(seg.substr(0, comma));
+                                int b = stoi(seg.substr(comma + 1));
+                                avoidSegs.emplace_back(a, b);
+                            }
+                        }
+                    }
+                } else if (line.starts_with("IncludeNode:")) {
+                    includeNode = stoi(line.substr(12));
+                } else if (line.starts_with("MaxWalkTime:")) {
+                    maxWalk = stod(line.substr(13));
+                }
+            }
+
+            // Dispatch to correct function
+            if (mode == "driving") {
+                double bestTime, altTime;
+                auto bestPath = findBestRoute(graph, source, destination, bestTime);
+                auto altPath = bestPath.empty() ? vector<int>() : findAlternativeRoute(graph, source, destination, bestPath, altTime);
+                outFile << "Source:" << source << "\nDestination:" << destination << "\n";
+                if (bestPath.empty()) {
+                    outFile << "BestDrivingRoute:none\nAlternativeDrivingRoute:none\n";
+                } else {
+                    outFile << "BestDrivingRoute:";
+                    for (size_t i = 0; i < bestPath.size(); ++i) {
+                        outFile << bestPath[i] << (i + 1 < bestPath.size() ? "," : "");
+                    }
+                    outFile << "(" << bestTime << ")\n";
+
+                    if (altPath.empty()) {
+                        outFile << "AlternativeDrivingRoute:none\n";
+                    } else {
+                        outFile << "AlternativeDrivingRoute:";
+                        for (size_t i = 0; i < altPath.size(); ++i) {
+                            outFile << altPath[i] << (i + 1 < altPath.size() ? "," : "");
+                        }
+                        outFile << "(" << altTime << ")\n";
+                    }
+                }
+            } else if (mode == "restricted") {
+                auto path = restrictedDrivingRoute(graph, source, destination, avoidNodes, avoidSegs, includeNode);
+                outFile << "Source:" << source << "\nDestination:" << destination << "\n";
+                if (path.empty()) {
+                    outFile << "RestrictedDrivingRoute:none\n";
+                } else {
+                    outFile << "RestrictedDrivingRoute:";
+                    int totalTime = 0;
+                    for (size_t i = 0; i < path.size(); ++i) {
+                        outFile << path[i];
+                        if (i + 1 < path.size()) outFile << ",";
+                        if (i + 1 < path.size()) {
+                            auto u = graph.findVertex(path[i]);
+                            for (auto e : u->getAdj()) {
+                                if (e->getDest()->getInfo() == path[i + 1]) {
+                                    totalTime += e->getDrivingWeight();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    outFile << "(" << totalTime << ")\n";
+                }
+            } else if (mode == "env") {
+                auto route = findEnvFriendlyRoute(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
+                outFile << "Source:" << source << "\nDestination:" << destination << "\n";
+                if (route.parkingNode == -1) {
+                    outFile << "DrivingRoute:none\nParkingNode:none\nWalkingRoute:none\nTotalTime:\nMessage:" << route.message << "\n";
+                } else {
+                    outFile << "DrivingRoute:";
+                    for (size_t i = 0; i < route.drivingPath.size(); ++i) {
+                        outFile << route.drivingPath[i] << (i + 1 < route.drivingPath.size() ? "," : "");
+                    }
+                    outFile << "(" << route.drivingTime << ")\n";
+
+                    outFile << "ParkingNode:" << route.parkingNode << "\n";
+
+                    outFile << "WalkingRoute:";
+                    for (size_t i = 0; i < route.walkingPath.size(); ++i) {
+                        outFile << route.walkingPath[i] << (i + 1 < route.walkingPath.size() ? "," : "");
+                    }
+                    outFile << "(" << route.walkingTime << ")\n";
+
+                    outFile << "TotalTime:" << route.totalTime << "\n";
+                }
+            } else if (mode == "env_alt") {
+                auto results = AlternativeRoute::findTwoSolutions(graph, source, destination, maxWalk, avoidNodes, avoidSegs);
+                outFile << "Source:" << source << "\nDestination:" << destination << "\n";
+                if (results.empty()) {
+                    outFile << "Message:No alternative routes found.\n";
+                } else {
+                    for (size_t i = 0; i < results.size(); ++i) {
+                        const auto& r = results[i];
+                        outFile << "DrivingRoute" << (i+1) << ":";
+                        for (size_t j = 0; j < r.drivingPath.size(); ++j) {
+                            outFile << r.drivingPath[j] << (j + 1 < r.drivingPath.size() ? "," : "");
+                        }
+                        outFile << "(" << r.drivingTime << ")\n";
+                        outFile << "ParkingNode" << (i+1) << ":" << r.parkingNode << "\n";
+                        outFile << "WalkingRoute" << (i+1) << ":";
+                        for (size_t j = 0; j < r.walkingPath.size(); ++j) {
+                            outFile << r.walkingPath[j] << (j + 1 < r.walkingPath.size() ? "," : "");
+                        }
+                        outFile << "(" << r.walkingTime << ")\n";
+                        outFile << "TotalTime" << (i+1) << ":" << r.totalTime << "\n";
+                    }
+                }
+            }
+
+            outFile << "\n---\n";
+        }
+    }
+}
+
+
+// ----------------------------------------------------------
 // MAIN MENU FUNCTION
 // ----------------------------------------------------------
 
@@ -490,19 +649,16 @@ void menu() {
     reader.loadLocations(graph, "../mock_csv_data/Locations.csv");
     reader.loadDistances(graph, "../mock_csv_data/Distances.csv");
 
-    // TODO: implement batch mode at the end of the project
-    /*
-    // Check for batch mode input
     ifstream test("batch/input.txt");
     if (test.is_open()) {
         string line;
         getline(test, line);
-        if (line.starts_with("Mode:driving")) {
-            runBatchMode_T2_2(graph);
-            return; // skip interactive menu
+        if (line.starts_with("Mode:")) {
+            runBatchMode(graph);
+            return;
         }
     }
-     */
+
 
     while (true) {
         displayMainMenu();
