@@ -116,9 +116,35 @@ EnvFriendlyRoute findEnvFriendlyRoute(
         });
     }
 
-    // If no valid routes are found, return a route indicating failure
-    if (validRoutes.empty()) {
-        return EnvFriendlyRoute{-1, 0, 0, 0, {}, {}, "No valid routes within max walking time or due to avoids."};
+
+    if (valid.empty()) {
+        bool anyParkingCandidate = false;
+        bool anyWalkableCandidate = false;
+
+        for (auto& [parkingNode, driveInfo] : driveMap) {
+            Vertex<int>* pv = g.findVertex(parkingNode);
+            if (!pv || pv->getParking() != 1) continue;
+
+            anyParkingCandidate = true;
+
+            if (walkMap.count(parkingNode)) {
+                auto [walkTime, _] = walkMap[parkingNode];
+                if (walkTime <= maxWalk) {
+                    anyWalkableCandidate = true;
+                    break;
+                }
+            }
+        }
+
+        string reason;
+        if (!anyParkingCandidate && !anyWalkableCandidate) {
+            reason = "No parking nodes reachable from source and walking routes exceed max walking time.";
+        } else if (!anyParkingCandidate) {
+            reason = "No parking nodes reachable from source.";
+        } else {
+            reason = "All walking routes from parking exceed max walking time.";
+        }
+        return EnvFriendlyRoute{-1, 0, 0, 0, {}, {}, reason};
     }
 
     // Sort the valid routes first by total time, then by walking time (descending)
